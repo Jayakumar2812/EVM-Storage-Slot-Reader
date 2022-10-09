@@ -3,55 +3,51 @@ import type { NextPage } from 'next';
 import Head from 'next/head';
 import styles from '../styles/Home.module.css';
 import {useProvider} from "wagmi";
-import { useState ,useEffect } from "react";
+import { useState } from "react";
 import {ethers} from "ethers"
-import {QueryStruct,Output} from "../components/interface"
+import {QueryStruct} from "../components/interface"
 
 let id = 0;
 const Home: NextPage = () => {
   const provider = useProvider();
   const[ContractAddress,setContractAddress] = useState("");
-  const[VariableType,setVariableType] = useState("uint256");
-  const[SlotNumber,setSlotNumber] = useState("0");
   const [QueryList,setQueryList] = useState<QueryStruct[] >([
 ]);
-const [OutputList,setOutputList] = useState<Output[] >([
-]);
-
-const UpdateVariableType =(event:any)=>{
-  setVariableType(event.target.value);
-}
-const UpdateSlotNumber =(event:any)=>{
-  setSlotNumber(event.target.value)
-}
 
 const UpdateContractAddress =(event:any)=>{
     setContractAddress(event.target.value);
   }
+  const form: any = document.querySelector('#QueringFrom');
+  form.onsubmit = () => {
+    const formData = new FormData(form);
+  
+    const variableType = formData.get('vars') as string;
+    const SlotNumber = formData.get('SlotNumber') as string;
+    ++id;
+    setQueryList ((prevList) =>   {
+      prevList.push({variableType:variableType ,slotNumber:SlotNumber,id:id});
+      console.log(QueryList);
+      return prevList
+    })
 
-  useEffect(() => { 
-  }, [QueryList])
 
- const onClear = () => {
-  setQueryList([]);
- }
- const onAdd = (event) => {
-  event.preventDefault()
-  console.log("Called");
-  let newlist = [... QueryList];
-  ++id;
-  newlist.push({variableType:VariableType ,slotNumber:SlotNumber,id});
-  setQueryList(newlist);
-  return false;
-  }
-  const FetchData = async() =>{
-    console.log("ContractAddress ----> ",ContractAddress);
+    return false; // prevent reload
+  };
 
-      await Promise.all(QueryList.map(async (querys) => {
-        const value = await provider.getStorageAt(ethers.utils.getAddress(ContractAddress),ethers.BigNumber.from(querys.slotNumber));
-        console.log(value);
-      }));
-  }
+  // const FetchData = async() =>{
+  //   console.log("ContractAddress ----> ",ContractAddress,"VariableType ----> ",VariableType,"SlotNumber----->",SlotNumber );
+    
+  //   const value = await provider.getStorageAt(ethers.utils.getAddress(ContractAddress),SlotNumber);
+  //   console.log(value);
+  // }
+
+  // const FetchMockData = async() =>{
+  //   // setFormvalue()
+  //   console.log("ContractAddress ----> ",ContractAddress,"VariableType ----> ",VariableType,"SlotNumber----->",SlotNumber );
+    
+  //   // const value = await provider.getStorageAt(ethers.utils.getAddress(ContractAddress),SlotNumber);
+  //   // console.log(value);
+  // }
 
 
   return (
@@ -71,20 +67,20 @@ const UpdateContractAddress =(event:any)=>{
         </div>
         </div>
         <div>
-        <form >
+        <form id='QueringFrom'>
         <fieldset>
           <label htmlFor="Variable">Variable Type:</label>
-          <select  name="vars" value={VariableType} onChange={UpdateVariableType}  >
+          <select  name="vars">
             <option value= "uint256">uint256</option>
             <option value= "string">string</option>
             <option value= "bytes">bytes</option>
             <option value= "uin256[]">uin256[]</option>
           </select>
           <label htmlFor="Slot number">Slot number:</label>
-          <input name= "SlotNumber" type="string" value={SlotNumber} onChange={UpdateSlotNumber} />
+          <input name= "SlotNumber" type="string"  />
           </fieldset>
-          <button onClick={onAdd} > add </button>
-          <button onClick={onClear} > clear all </button>
+          <button > add </button>
+          <input type="submit"/>
         </form>
         </div>
         <div>
@@ -96,9 +92,6 @@ const UpdateContractAddress =(event:any)=>{
               </>
             </div>
           ))}
-        </div>
-        <div>
-        <button onClick={FetchData} > fetch output </button>
         </div>
         
       </main>
